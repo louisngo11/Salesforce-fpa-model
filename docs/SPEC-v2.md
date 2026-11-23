@@ -96,7 +96,7 @@ Upgrade the existing dashboard, keeping the same link and the same look, into a 
 
 ## Further Notes
 
-- **Owner:** Louis Ngo (header byline added). **Open item:** LinkedIn and GitHub URLs for the header.
+- **Owner:** Louis Ngo. Header links to LinkedIn (linkedin.com/in/louislamngo) and the GitHub repo.
 - **Unverified input:** the IMF 2.3% US GDP outlook still comes from a secondary source and should be checked against IMF tables.
 - **Known modeling caveat:** v1's FY27E GAAP margin on H1 run-rate (20.8%) sits above the company's 20.1% guide. v2 should either explain the gap in the memo or calibrate H2.
 - **Key dates:** Q3 FY27 results Dec 2, 2026 (after market close); refresh reminder Dec 3, 10:00 AM ET.

@@ -1,0 +1,159 @@
+{
+  "source": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001108524.json",
+  "units": {
+    "financials": "USD millions",
+    "rpo": "USD billions"
+  },
+  "annual": {
+    "FY21": {
+      "revenue": 21252.0,
+      "gross_profit": 15814.0,
+      "sales_marketing": 9674.0,
+      "research_development": 3598.0,
+      "general_admin": 2087.0,
+      "restructuring": 0.0,
+      "operating_income": 455.0,
+      "net_income": 4072.0,
+      "operating_cash_flow": 4801.0,
+      "capex": 710.0,
+      "stock_comp": 2190.0
+    },
+    "FY22": {
+      "revenue": 26492.0,
+      "gross_profit": 19466.0,
+      "sales_marketing": 11855.0,
+      "research_development": 4465.0,
+      "general_admin": 2598.0,
+      "restructuring": 0.0,
+      "operating_income": 548.0,
+      "net_income": 1444.0,
+      "operating_cash_flow": 6000.0,
+      "capex": 717.0,
+      "stock_comp": 2779.0
+    },
+    "FY23": {
+      "revenue": 31352.0,
+      "gross_profit": 22992.0,
+      "sales_marketing": 13526.0,
+      "research_development": 5055.0,
+      "general_admin": 2553.0,
+      "restructuring": 828.0,
+      "operating_income": 1030.0,
+      "net_income": 208.0,
+      "operating_cash_flow": 7111.0,
+      "capex": 798.0,
+      "stock_comp": 3279.0
+    },
+    "FY24": {
+      "revenue": 34857.0,
+      "gross_profit": 26316.0,
+      "sales_marketing": 12877.0,
+      "research_development": 4906.0,
+      "general_admin": 2534.0,
+      "restructuring": 988.0,
+      "operating_income": 5011.0,
+      "net_income": 4136.0,
+      "operating_cash_flow": 10234.0,
+      "capex": 736.0,
+      "stock_comp": 2787.0
+    },
+    "FY25": {
+      "revenue": 37895.0,
+      "gross_profit": 29252.0,
+      "sales_marketing": 13257.0,
+      "research_development": 5493.0,
+      "general_admin": 2836.0,
+      "restructuring": 461.0,
+      "operating_income": 7205.0,
+      "net_income": 6197.0,
+      "operating_cash_flow": 13092.0,
+      "capex": 658.0,
+      "stock_comp": 3183.0
+    },
+    "FY26": {
+      "revenue": 41525.0,
+      "gross_profit": 32255.0,
+      "sales_marketing": 14345.0,
+      "research_development": 5993.0,
+      "general_admin": 3000.0,
+      "restructuring": 586.0,
+      "operating_income": 8331.0,
+      "net_income": 7457.0,
+      "operating_cash_flow": 14996.0,
+      "capex": 594.0,
+      "stock_comp": 3509.0
+    }
+  },
+  "quarterly": {
+    "Q1 FY26": {
+      "revenue": 9829.0,
+      "gross_profit": 7564.0,
+      "sales_marketing": 3429.0,
+      "research_development": 1460.0,
+      "general_admin": 697.0,
+      "restructuring": 36.0,
+      "operating_income": 1942.0,
+      "net_income": 1541.0
+    },
+    "Q2 FY26": {
+      "revenue": 10236.0,
+      "gross_profit": 7994.0,
+      "sales_marketing": 3443.0,
+      "research_development": 1481.0,
+      "general_admin": 734.0,
+      "restructuring": 4.0,
+      "operating_income": 2332.0,
+      "net_income": 1887.0
+    },
+    "Q3 FY26": {
+      "revenue": 10259.0,
+      "gross_profit": 8004.0,
+      "sales_marketing": 3456.0,
+      "research_development": 1433.0,
+      "general_admin": 667.0,
+      "restructuring": 260.0,
+      "operating_income": 2188.0,
+      "net_income": 2086.0
+    },
+    "Q4 FY26": {
+      "revenue": 11201.0,
+      "gross_profit": 8693.0,
+      "sales_marketing": 4017.0,
+      "research_development": 1619.0,
+      "general_admin": 902.0,
+      "restructuring": 286.0,
+      "operating_income": 1869.0,
+      "net_income": 1943.0
+    },
+    "Q1 FY27": {
+      "revenue": 11133.0,
+      "gross_profit": 8563.0,
+      "sales_marketing": 3769.0,
+      "research_development": 1627.0,
+      "general_admin": 740.0,
+      "restructuring": 80.0,
+      "operating_income": 2347.0,
+      "net_income": 2107.0
+    },
+    "Q2 FY27": {
+      "revenue": 11345.0,
+      "gross_profit": 8696.0,
+      "sales_marketing": 3859.0,
+      "research_development": 1687.0,
+      "general_admin": 725.0,
+      "restructuring": 94.0,
+      "operating_income": 2331.0,
+      "net_income": 3526.0
+    }
+  },
+  "rpo_fiscal_year_end": {
+    "FY19": 25.7,
+    "FY20": 30.8,
+    "FY21": 36.1,
+    "FY22": 43.7,
+    "FY23": 48.6,
+    "FY24": 56.9,
+    "FY25": 63.4,
+    "FY26": 72.4
+  }
+}

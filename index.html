@@ -1,0 +1,865 @@
+<title>Salesforce FP&amp;A Model</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: a model workbook. Sticky header with tabs, one tab visible at a time; summary tiles, then charts, then the schedules. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #12161c;
+  --ink-2: #4a5462;
+  --ink-3: #7a8494;
+  --line: #e1e5eb;
+  --line-2: #eef1f5;
+  --accent: #0b5cad;
+  --input: #1f4fd6;         /* banker convention: hard-coded inputs in blue */
+  --input-bg: #eef3ff;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #6250d6;
+  --good: #0f7b3e; --good-bg: #e3f4ea;
+  --bad: #b42318; --bad-bg: #fdeceb;
+  --warn: #8a5a00; --warn-bg: #fdf3dc;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1216; --surface: #171b21; --ink: #eef1f5; --ink-2: #b4bcc8; --ink-3: #848d9b;
+  --line: #2a313b; --line-2: #20262e; --accent: #6aa8ee; --input: #8fb0ff; --input-bg: #1b2540;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #9085e9;
+  --good: #5fd08f; --good-bg: #12301f; --bad: #ff8a80; --bad-bg: #3a1714; --warn: #f0c060; --warn-bg: #33270c;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #171b21; --ink: #eef1f5; --ink-2: #b4bcc8; --ink-3: #848d9b;
+  --line: #2a313b; --line-2: #20262e; --accent: #6aa8ee; --input: #8fb0ff; --input-bg: #1b2540;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #9085e9;
+  --good: #5fd08f; --good-bg: #12301f; --bad: #ff8a80; --bad-bg: #3a1714; --warn: #f0c060; --warn-bg: #33270c;
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--surface) 72%, transparent); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); transition: box-shadow 200ms ease; }
+header.top.scrolled { box-shadow: 0 1px 0 var(--line), 0 8px 20px -16px rgba(0, 0, 0, 0.35); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { header.top { background: var(--surface); } }
+@media (prefers-reduced-transparency: reduce) { header.top { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@media (prefers-contrast: more) { header.top { background: var(--surface); box-shadow: 0 1px 0 var(--ink-3); } }
+.top .wrap { padding-block: 14px 0; display: grid; gap: 10px; }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+h1 { font-family: var(--f-display); font-weight: 600; font-size: 1.55rem; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.meta { color: var(--ink-3); font-size: 0.8rem; flex-basis: 100%; }
+.byline { font-size: 0.86rem; color: var(--ink-2); }
+.byline b { color: var(--ink); font-weight: 600; }
+.meta b { color: var(--ink-2); font-weight: 500; }
+nav.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+nav.tabs a { font-family: var(--f-display); font-weight: 500; font-size: 0.92rem; color: var(--ink-2); text-decoration: none; padding: 8px 12px 10px; border-bottom: 2px solid transparent; white-space: nowrap; }
+nav.tabs a:hover { color: var(--ink); }
+nav.tabs a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); }
+nav.tabs a:active { opacity: 0.6; }
+.seg button, .reset { transition: transform 100ms ease-out; }
+.seg button:active, .reset:active { transform: scale(0.97); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+main .wrap { padding-block: 22px 60px; display: grid; gap: 22px; }
+section.view { display: grid; gap: 22px; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 1.15rem; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--f-display); font-weight: 600; font-size: 0.98rem; margin: 0; }
+.eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 500; }
+p { margin: 0; max-width: 72ch; color: var(--ink-2); }
+.lede { display: grid; gap: 6px; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.tile .k { font-size: 0.76rem; color: var(--ink-3); }
+.tile .v { font-family: var(--f-display); font-size: 1.7rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile .d { font-size: 0.78rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* Overview: hierarchy from size, weight and space, not boxes */
+#v-overview { gap: 44px; }
+.hero { display: grid; gap: 12px; padding-top: 6px; }
+.display { font-size: clamp(1.6rem, 3.4vw, 2.4rem); line-height: 1.12; letter-spacing: -0.022em; max-width: 30ch; }
+.hero p { font-size: 1rem; line-height: 1.55; max-width: 62ch; }
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px 28px; }
+.stat { display: grid; gap: 3px; align-content: start; }
+.stat .k { font-size: 0.78rem; color: var(--ink-3); }
+.stat .v { font-family: var(--f-display); font-weight: 600; font-size: 2.1rem; line-height: 1.05; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+.stat .d { font-size: 0.78rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.fig { margin: 0; display: grid; gap: 10px; min-width: 0; }
+.fig figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+.fig .note { font-size: 0.78rem; color: var(--ink-3); }
+.grid2.plain { gap: 32px 40px; }
+.takeaways { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 74ch; }
+.takeaways li { color: var(--ink-2); line-height: 1.55; }
+.takeaways b { color: var(--ink); font-weight: 600; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 14px; }
+.panel-head .note { font-size: 0.78rem; color: var(--ink-3); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 16px; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--f-body); fill: var(--ink-3); font-size: 11px; }
+.chart .lbl { fill: var(--ink-2); font-size: 11px; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.78rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.sw.line { height: 3px; border-radius: 2px; width: 16px; }
+.sw.dash { height: 0; border-top: 2px dashed; width: 16px; border-radius: 0; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 0.76rem; padding: 6px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); font-variant-numeric: tabular-nums; z-index: 3; line-height: 1.4; }
+.tip b { font-weight: 600; }
+
+.tablewrap { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line-2); }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
+thead th { font-weight: 500; color: var(--ink-3); font-size: 0.74rem; border-bottom: 1px solid var(--line); }
+thead th.est { color: var(--accent); }
+td.num { font-family: var(--f-mono); font-size: 0.8rem; }
+tr.sub td { color: var(--ink-3); font-size: 0.76rem; }
+tr.sub td:first-child { padding-left: 22px; }
+tr.total td { font-weight: 600; border-top: 1px solid var(--line); }
+tr.total td.num { font-weight: 500; }
+td.est, th.est { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+td.input { color: var(--input); }
+
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 500; padding: 1px 8px; border-radius: 999px; font-family: var(--f-body); }
+.pill.fav { color: var(--good); background: var(--good-bg); }
+.pill.unf { color: var(--bad); background: var(--bad-bg); }
+.pill.neu { color: var(--warn); background: var(--warn-bg); }
+
+/* Scenario controls */
+.controls { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .controls { grid-template-columns: minmax(0, 1fr); } }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { flex: 1; font: 500 0.84rem var(--f-body); padding: 7px 4px; background: var(--surface); color: var(--ink-2); border: 0; border-right: 1px solid var(--line); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--line-2); }
+.inputs { display: grid; gap: 12px; }
+.inp { display: grid; gap: 3px; }
+.inp .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.inp label { font-size: 0.8rem; color: var(--ink-2); }
+.inp output { font-family: var(--f-mono); font-size: 0.8rem; color: var(--input); background: var(--input-bg); padding: 0 6px; border-radius: 4px; }
+.inp .hint { font-size: 0.72rem; color: var(--ink-3); }
+input[type=range] { width: 100%; accent-color: var(--input); margin: 2px 0; }
+.group-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); border-top: 1px solid var(--line-2); padding-top: 10px; }
+.reset { justify-self: start; font: 500 0.78rem var(--f-body); color: var(--accent); background: none; border: 1px solid var(--line); padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+
+.macro { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.macro div { border-left: 2px solid var(--line); padding: 2px 0 2px 10px; display: grid; gap: 1px; }
+.macro .v { font-family: var(--f-display); font-weight: 600; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.macro .k { font-size: 0.74rem; color: var(--ink-3); }
+.macro .s { font-size: 0.7rem; color: var(--ink-3); }
+
+ul.notes { margin: 0; padding-left: 18px; color: var(--ink-2); display: grid; gap: 6px; max-width: 80ch; }
+ul.notes li::marker { color: var(--ink-3); }
+.src a { color: var(--accent); }
+.keypoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.kp { display: grid; gap: 4px; padding: 12px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+.kp h3 { font-size: 0.9rem; }
+.kp p { font-size: 0.84rem; }
+footer { color: var(--ink-3); font-size: 0.74rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Salesforce FP&amp;A Model</h1>
+      <span class="byline">Built by <b>Louis Ngo</b></span>
+      <span class="meta">NYSE: CRM · $ in millions · FY ends Jan 31 · Actuals through Q2 FY27</span>
+    </div>
+    <nav class="tabs" aria-label="Model sections">
+      <a href="#overview" data-tab="overview">Overview</a>
+      <a href="#actuals" data-tab="actuals">Actuals</a>
+      <a href="#forecast" data-tab="forecast">Forecast</a>
+      <a href="#budget" data-tab="budget">Budget vs actual</a>
+      <a href="#sources" data-tab="sources">Sources</a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="wrap">
+
+<!-- OVERVIEW -->
+<section class="view" id="v-overview">
+  <div class="hero">
+    <h2 class="display">Growth has slowed to high single digits. Margins and cash flow now carry the story.</h2>
+    <p>Revenue nearly doubled from FY21 to FY26 while GAAP operating margin rose from 2% to 20%. The forecast tests how much of that margin survives a slower top line.</p>
+  </div>
+  <div class="figures" id="kpis"></div>
+  <div class="grid2 plain">
+    <figure class="fig" id="ov-rev">
+      <figcaption><h3>Revenue</h3><span class="note" id="ov-scn-note"></span></figcaption>
+      <div class="chart" id="c-ov-rev"></div>
+    </figure>
+    <figure class="fig" id="ov-margin">
+      <figcaption><h3>GAAP operating margin</h3><span class="note">% of revenue · shaded years are forecast</span></figcaption>
+      <div class="chart" id="c-ov-margin"></div>
+    </figure>
+  </div>
+  <ul class="takeaways" id="ov-takeaways">
+    <li><b>FY26 revenue beat plan by $825M.</b> $41.5B against a $40.7B guidance midpoint, partly from the Informatica acquisition.</li>
+    <li><b>FY26 GAAP margin missed plan by 1.5 points.</b> 20.1% against a 21.6% guide, as restructuring and deal costs absorbed the upside.</li>
+    <li><b>FY27 is being reforecast up on revenue, down on margin.</b> The revenue midpoint is up $250M since February, mostly acquired, while the GAAP margin guide fell from 20.9% to 20.1%.</li>
+  </ul>
+</section>
+
+<!-- ACTUALS -->
+<section class="view" id="v-actuals" hidden>
+  <div class="lede">
+    <span class="eyebrow">Source: SEC EDGAR XBRL, 10-K and 10-Q filings</span>
+    <h2>Historical income statement and cash flow</h2>
+    <p>Reported GAAP figures. Cost of revenue is derived as revenue minus gross profit. Free cash flow is operating cash flow less capital expenditures.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Annual P&amp;L, FY21–FY26</h3><span class="note">$M · % rows are % of revenue</span></div>
+    <div class="tablewrap" id="t-annual"></div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-head"><h3>Quarterly revenue</h3><span class="note">$M · Q4 FY26 derived as FY less Q1–Q3</span></div>
+      <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Revenue</span></div>
+      <div class="chart" id="c-q-rev"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Remaining performance obligation (RPO)</h3><span class="note">$B at fiscal year end · contracted revenue not yet recognized</span></div>
+      <div class="legend"><span><i class="sw" style="background:var(--s3)"></i>RPO</span></div>
+      <div class="chart" id="c-rpo"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Quarterly P&amp;L, Q1 FY26–Q2 FY27</h3><span class="note">$M</span></div>
+    <div class="tablewrap" id="t-quarterly"></div>
+  </div>
+</section>
+
+<!-- FORECAST -->
+<section class="view" id="v-forecast" hidden>
+  <div class="lede">
+    <span class="eyebrow">Driver-based model · FY27E anchored to company guidance</span>
+    <h2>Five-year forecast with live scenarios</h2>
+    <p>Pick a preset or move any input. Blue values are hard-coded assumptions; everything else is calculated. FY27E revenue uses the August 2026 guidance range, and FY27E cost ratios use first-half FY27 actuals. From FY28 on, every line runs off the drivers below.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Economic backdrop used as drivers</h3><span class="note">Latest available as of Nov 2026 · see Sources</span></div>
+    <div class="macro">
+      <div><span class="k">US real GDP, 2025</span><span class="v">+2.2%</span><span class="s">BEA advance estimate</span></div>
+      <div><span class="k">US real GDP, 2026–27 outlook</span><span class="v">+2.3%</span><span class="s">IMF WEO Oct 2026, via secondary source</span></div>
+      <div><span class="k">Global software spend, 2027</span><span class="v">+14.6%</span><span class="s">Gartner, Oct 2026 ($1.68T)</span></div>
+      <div><span class="k">Fed funds target</span><span class="v">3.75–4.00%</span><span class="s">Held at Oct 28, 2026 meeting</span></div>
+      <div><span class="k">CPI, Oct 2026</span><span class="v">+0.4% m/m</span><span class="s">BLS; no official y/y after shutdown gap</span></div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="panel" id="inputs-panel">
+      <div class="panel-head"><h3>Scenario inputs</h3></div>
+      <div class="seg" role="group" aria-label="Scenario preset">
+        <button type="button" data-scn="bear" id="scn-bear">Bear</button>
+        <button type="button" data-scn="base" id="scn-base">Base</button>
+        <button type="button" data-scn="bull" id="scn-bull">Bull</button>
+      </div>
+      <div class="inputs" id="inputs"></div>
+      <button type="button" class="reset" id="reset">Reset to Base</button>
+    </div>
+    <div style="display:grid;gap:16px;min-width:0">
+      <div class="tiles" id="fc-kpis"></div>
+      <div class="panel">
+        <div class="panel-head"><h3>Revenue by scenario</h3><span class="note">$B · dashed = preset, solid ink = your current inputs</span></div>
+        <div class="legend" id="lg-scn"></div>
+        <div class="chart" id="c-scn"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Forecast P&amp;L and cash flow</h3><span class="note" id="fc-note"></span></div>
+    <div class="tablewrap" id="t-forecast"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Operating expense budget by function</h3><span class="note">$M · current inputs</span></div>
+    <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Sales &amp; marketing</span><span><i class="sw" style="background:var(--s2)"></i>Research &amp; development</span><span><i class="sw" style="background:var(--s3)"></i>General &amp; administrative</span></div>
+    <div class="chart" id="c-opex"></div>
+  </div>
+</section>
+
+<!-- BUDGET VS ACTUAL -->
+<section class="view" id="v-budget" hidden>
+  <div class="lede">
+    <span class="eyebrow">Plan vs. delivery · company guidance treated as the budget</span>
+    <h2>Budget vs. actual and the FY27 reforecast</h2>
+    <p>Public companies don't publish internal budgets, so this tab uses the company's annual guidance as the plan of record. Each guidance update is treated as a reforecast.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>FY26: initial guidance (Feb 26, 2025) vs. actual</h3><span class="note">$M · F = favorable, U = unfavorable</span></div>
+    <div class="tablewrap" id="t-bva"></div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-head"><h3>FY27 revenue guidance by vintage</h3><span class="note">$B · bar = guided range, tick = midpoint</span></div>
+      <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Guided range</span><span><i class="sw line" style="background:var(--s2)"></i>FY26 seasonality run-rate</span></div>
+      <div class="chart" id="c-guide"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>FY27 first-half pacing</h3><span class="note">$M · H1 = Q1 + Q2 FY27</span></div>
+      <div class="tablewrap" id="t-pacing"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>FY27 reforecast log</h3><span class="note">What changed at each update</span></div>
+    <div class="tablewrap" id="t-reforecast"></div>
+  </div>
+</section>
+
+<!-- SOURCES -->
+<section class="view" id="v-sources" hidden>
+  <div class="lede">
+    <span class="eyebrow">Data lineage</span>
+    <h2>Sources, method and known gaps</h2>
+  </div>
+  <div class="panel src">
+    <h3>Company data</h3>
+    <ul class="notes">
+      <li>Income statement, cash flow, RPO: SEC EDGAR XBRL company facts for salesforce, Inc. (CIK 0001108524), pulled Nov 23, 2026. Latest filing: 10-Q for Q2 FY27, filed Aug 27, 2026. <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=0001108524&amp;type=10-K" target="_blank" rel="noopener">EDGAR filings</a></li>
+      <li>FY26 initial guidance: <a href="https://investor.salesforce.com/news/news-details/2025/Salesforce-Announces-Fourth-Quarter-and-Fiscal-Year-2025-Results/" target="_blank" rel="noopener">Q4 FY25 results release, Feb 26, 2025</a></li>
+      <li>FY27 initial guidance: <a href="https://investor.salesforce.com/news/news-details/2026/Salesforce-Delivers-Record-Fourth-Quarter-Fiscal-2026-Results/" target="_blank" rel="noopener">Q4 FY26 results release, Feb 25, 2026</a></li>
+      <li>FY27 first update: <a href="https://investor.salesforce.com/news/news-details/2026/Salesforce-Delivers-Record-First-Quarter-Fiscal-2027-Results/" target="_blank" rel="noopener">Q1 FY27 results release, May 2026</a></li>
+      <li>FY27 second update: <a href="https://www.salesforce.com/news/press-releases/2026/08/26/fy27-q2-earnings/" target="_blank" rel="noopener">Q2 FY27 results release, Aug 26, 2026</a></li>
+    </ul>
+  </div>
+  <div class="panel src">
+    <h3>Economic data</h3>
+    <ul class="notes">
+      <li>US real GDP 2025 +2.2%: <a href="https://www.bea.gov/sites/default/files/2026-02/gdp4q25-adv.pdf" target="_blank" rel="noopener">BEA advance estimate, Feb 20, 2026</a> (may since have been revised).</li>
+      <li>US GDP outlook 2.3% for 2026–27: IMF World Economic Outlook, Oct 2026, as reported by <a href="https://effectstory.com/en/data/imf-growth-forecasts" target="_blank" rel="noopener">a secondary aggregator</a>. Not yet checked against the IMF's own tables.</li>
+      <li>Software spending +14.6% in 2027: <a href="https://www.businesswire.com/news/home/20261021492736/en/Gartner-Forecasts-Worldwide-IT-Spending-to-Grow-15-in-2027-Totaling-%247.35-Trillion" target="_blank" rel="noopener">Gartner, Oct 21, 2026</a></li>
+      <li>Fed funds and October CPI: <a href="https://www.cnbc.com/2026/10/28/fed-meeting-today-live-updates.html" target="_blank" rel="noopener">CNBC, Oct 28, 2026</a>; <a href="https://www.cnbc.com/2026/11/10/cpi-inflation-report-october-2026.html" target="_blank" rel="noopener">CNBC, Nov 10, 2026</a></li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h3>Method</h3>
+    <ul class="notes">
+      <li><b>Revenue.</b> FY27E is the low, mid or high point of the August 2026 guidance range, depending on scenario. FY28E growth is an input. Each later year fades by the fade input. A macro adjustment adds (GDP assumption − 2.3%) × the elasticity input to every year from FY28 on.</li>
+      <li><b>Costs.</b> FY27E ratios equal first-half FY27 actuals. FY28E–FY31E ratios move in a straight line toward the FY31 targets. Gross margin is held flat at the input.</li>
+      <li><b>Cash.</b> Operating cash flow and capex are modeled as % of revenue. FCF = OCF − capex. Rule of 40 = revenue growth % + FCF margin %.</li>
+      <li><b>GAAP only.</b> The forecast is GAAP and is not adjusted for stock-based compensation or amortization. Non-GAAP margins appear only where the company guided them.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h3>Known gaps</h3>
+    <ul class="notes">
+      <li>FRED, BLS and World Bank APIs were unreachable from the build environment, so economic figures come from published releases instead of live series.</li>
+      <li>Segment and cloud-level revenue (Sales, Service, Platform, Integration and Analytics) isn't in the XBRL company facts. Adding it needs the 10-K segment tables.</li>
+      <li>FY27E includes Informatica and, after closing, the pending Contentful and Fin acquisitions. Organic growth is not split out.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>Built from public filings for educational and portfolio purposes. Not investment advice.</footer>
+</div></main>
+
+<script>
+(() => {
+"use strict";
+// ---------- DATA (SEC EDGAR XBRL, $M) ----------
+const A = {
+  fy:   ["FY21","FY22","FY23","FY24","FY25","FY26"],
+  rev:  [21252,26492,31352,34857,37895,41525],
+  gp:   [15814,19466,22992,26316,29252,32255],
+  sm:   [9674,11855,13526,12877,13257,14345],
+  rd:   [3598,4465,5055,4906,5493,5993],
+  ga:   [2087,2598,2553,2534,2836,3000],
+  rs:   [0,0,828,988,461,586],
+  oi:   [455,548,1030,5011,7205,8331],
+  ni:   [4072,1444,208,4136,6197,7457],
+  eps:  [4.38,1.48,0.21,4.20,6.36,7.80],
+  ocf:  [4801,6000,7111,10234,13092,14996],
+  capex:[710,717,798,736,658,594],
+  sbc:  [2190,2779,3279,2787,3183,3509],
+};
+const RPO = { fy:["FY19","FY20","FY21","FY22","FY23","FY24","FY25","FY26"], v:[25.7,30.8,36.1,43.7,48.6,56.9,63.4,72.4] };
+const Q = {
+  q:   ["Q1 FY26","Q2 FY26","Q3 FY26","Q4 FY26","Q1 FY27","Q2 FY27"],
+  rev: [9829,10236,10259,11201,11133,11345],
+  gp:  [7564,7994,8004,8693,8563,8696],
+  sm:  [3429,3443,3456,4017,3769,3859],
+  rd:  [1460,1481,1433,1619,1627,1687],
+  ga:  [697,734,667,902,740,725],
+  rs:  [36,4,260,286,80,94],
+  oi:  [1942,2332,2188,1869,2347,2331],
+};
+const QPRIOR = [9133,9325,9444]; // Q1-Q3 FY25 revenue for y/y
+const H1 = { rev: 11133+11345, gp: 8563+8696, sm: 3769+3859, rd: 1627+1687, ga: 740+725, rs: 80+94, oi: 2347+2331 };
+const GUIDE27 = [
+  { date:"Feb 25, 2026", label:"Initial (Feb)", lo:45800, hi:46200, gaap:20.9, ng:34.3, note:"Includes ~3 pts from Informatica; organic re-acceleration expected in H2." },
+  { date:"May 27, 2026", label:"Q1 update (May)", lo:45900, hi:46200, gaap:20.6, ng:34.3, note:"Midpoint raised; OCF/FCF growth cut to 4–5% for interest on $25B debt funding the accelerated share repurchase." },
+  { date:"Aug 26, 2026", label:"Q2 update (Aug)", lo:46100, hi:46400, gaap:20.1, ng:34.3, note:"+$200M raise = +$100M organic, +$200M pending Contentful & Fin acquisitions, −$100M FX." },
+];
+
+// ---------- FORMAT ----------
+const nf0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const m = v => v < 0 ? "(" + nf0.format(-v) + ")" : nf0.format(v);
+const pct = (v, d=1) => (v*100).toFixed(d) + "%";
+const bn = (v, d=1) => "$" + (v/1000).toFixed(d) + "B";
+const pts = v => (v >= 0 ? "+" : "−") + Math.abs(v*100).toFixed(1) + " pts";
+const sgn = (v, f) => (v >= 0 ? "+" : "−") + f(Math.abs(v));
+const el = (tag, attrs={}, kids=[]) => { const e = document.createElement(tag); for (const [k,v] of Object.entries(attrs)) { if (k === "text") e.textContent = v; else if (k === "html") e.innerHTML = v; else e.setAttribute(k, v); } for (const c of [].concat(kids)) if (c != null) e.append(c); return e; };
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// ---------- SCENARIOS ----------
+const INPUTS = [
+  { group:"Revenue" },
+  { id:"fy27", label:"FY27E landing within Aug guide", min:0, max:2, step:1, fmt:v=>["Low $46.1B","Mid $46.25B","High $46.4B"][v], hint:"Guide range $46.1–46.4B" },
+  { id:"g28", label:"FY28E revenue growth", min:3, max:15, step:0.25, fmt:v=>v.toFixed(2)+"%", hint:"FY26 actual 9.6%; FY27 guide ~11.5% incl. ~3 pts M&A" },
+  { id:"fade", label:"Annual growth fade", min:0, max:2, step:0.25, fmt:v=>"−"+v.toFixed(2)+" pts/yr", hint:"Deceleration each year after FY28" },
+  { id:"gdp", label:"US real GDP growth assumption", min:-1, max:4, step:0.1, fmt:v=>v.toFixed(1)+"%", hint:"Baseline 2.3% (IMF)" },
+  { id:"elas", label:"Revenue sensitivity to GDP", min:0, max:2.5, step:0.1, fmt:v=>v.toFixed(1)+"×", hint:"Revenue growth pts per 1 pt GDP vs baseline" },
+  { group:"Cost structure (FY31 targets)" },
+  { id:"gm", label:"Gross margin", min:72, max:82, step:0.1, fmt:v=>v.toFixed(1)+"%", hint:"FY26 77.7% · H1 FY27 76.8%" },
+  { id:"sm", label:"Sales & marketing, % of revenue", min:26, max:37, step:0.1, fmt:v=>v.toFixed(1)+"%", hint:"FY26 34.5% · H1 FY27 33.9%" },
+  { id:"rd", label:"R&D, % of revenue", min:11, max:18, step:0.1, fmt:v=>v.toFixed(1)+"%", hint:"FY26 14.4% · H1 FY27 14.7%" },
+  { id:"ga", label:"G&A, % of revenue", min:4, max:9, step:0.1, fmt:v=>v.toFixed(1)+"%", hint:"FY26 7.2% · H1 FY27 6.5%" },
+  { id:"rs", label:"Restructuring, % of revenue", min:0, max:3, step:0.05, fmt:v=>v.toFixed(2)+"%", hint:"FY26 1.4% · H1 FY27 0.8%" },
+  { group:"Cash flow" },
+  { id:"ocf", label:"Operating cash flow, % of revenue", min:25, max:42, step:0.5, fmt:v=>v.toFixed(1)+"%", hint:"FY26 36.1%; FY27 guide implies ~34%" },
+  { id:"capex", label:"Capex, % of revenue", min:0.5, max:3, step:0.1, fmt:v=>v.toFixed(1)+"%", hint:"FY26 1.4%" },
+];
+const PRESETS = {
+  bear: { fy27:0, g28:6.0, fade:0.75, gdp:0.8, elas:1.0, gm:75.5, sm:33.5, rd:14.5, ga:6.5, rs:1.0, ocf:31, capex:1.6 },
+  base: { fy27:1, g28:9.0, fade:0.5, gdp:2.3, elas:1.0, gm:77.0, sm:31.0, rd:14.0, ga:6.0, rs:0.5, ocf:34, capex:1.4 },
+  bull: { fy27:2, g28:11.5, fade:0.25, gdp:2.8, elas:1.0, gm:78.5, sm:29.0, rd:13.5, ga:5.5, rs:0.25, ocf:36, capex:1.3 },
+};
+const SCN_COLOR = { bear:"--s2", base:"--s1", bull:"--s3" };
+const FYE = ["FY27E","FY28E","FY29E","FY30E","FY31E"];
+
+function model(p) {
+  const rows = [];
+  const r27 = [46100, 46250, 46400][p.fy27];
+  const h1 = { gm: H1.gp/H1.rev, sm: H1.sm/H1.rev, rd: H1.rd/H1.rev, ga: H1.ga/H1.rev, rs: H1.rs/H1.rev };
+  let prev = A.rev[5];
+  const macro = (p.gdp - 2.3) * p.elas;
+  for (let i = 0; i < 5; i++) {
+    const rev = i === 0 ? r27 : prev * (1 + (p.g28 - p.fade*(i-1) + macro)/100);
+    const t = i / 4; // 0 at FY27, 1 at FY31
+    const lerp = (a, b) => a + (b - a) * t;
+    const gm = i === 0 ? h1.gm : p.gm/100;
+    const sm = lerp(h1.sm, p.sm/100), rd = lerp(h1.rd, p.rd/100), ga = lerp(h1.ga, p.ga/100), rs = lerp(h1.rs, p.rs/100);
+    const gp = rev*gm, smv = rev*sm, rdv = rev*rd, gav = rev*ga, rsv = rev*rs;
+    const oi = gp - smv - rdv - gav - rsv;
+    const ocf = i === 0 ? A.ocf[5]*1.045 : rev*p.ocf/100;   // FY27 = guide (+4-5%)
+    const capex = rev*p.capex/100;
+    rows.push({ fy: FYE[i], rev, g: rev/prev - 1, gp, sm: smv, rd: rdv, ga: gav, rs: rsv, oi, ocf, capex, fcf: ocf - capex });
+    prev = rev;
+  }
+  return rows;
+}
+const hist = A.fy.map((fy, i) => ({ fy, rev: A.rev[i], g: i ? A.rev[i]/A.rev[i-1]-1 : 21252/17098-1, gp: A.gp[i], sm: A.sm[i], rd: A.rd[i], ga: A.ga[i], rs: A.rs[i], oi: A.oi[i], ocf: A.ocf[i], capex: A.capex[i], fcf: A.ocf[i]-A.capex[i] }));
+
+// ---------- STATE ----------
+let state = { ...PRESETS.base }, scn = "base";
+try { const s = JSON.parse(localStorage.getItem("crm-fpa-inputs") || "null"); if (s && s.state) { state = { ...PRESETS.base, ...s.state }; scn = s.scn || "custom"; } } catch (e) {}
+const save = () => { try { localStorage.setItem("crm-fpa-inputs", JSON.stringify({ state, scn })); } catch (e) {} };
+
+// ---------- CHART HELPERS ----------
+function svgEl(tag, attrs) { const e = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+function niceTicks(max, n=4) { const raw = max/n, mag = Math.pow(10, Math.floor(Math.log10(raw))); const step = [1,2,2.5,5,10].map(s=>s*mag).find(s => s >= raw); const out=[]; for (let v=0; v<=max+1e-9; v+=step) out.push(+v.toFixed(6)); if (out[out.length-1] < max) out.push(+(out[out.length-1]+step).toFixed(6)); return out; }
+function frame(host, H) {
+  host.innerHTML = "";
+  const W = Math.max(300, host.clientWidth || 600);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" });
+  host.append(svg);
+  const tip = el("div", { class: "tip", hidden: "" });
+  host.append(tip);
+  const show = (x, y, html) => { tip.innerHTML = html; tip.hidden = false; const hw = W/2; tip.style.left = Math.min(Math.max(x, 70), W-70) + "px"; tip.style.top = y + "px"; };
+  const hide = () => { tip.hidden = true; };
+  return { svg, W, H, show, hide };
+}
+function yAxis(svg, ticks, y, x0, x1, fmt) {
+  for (const t of ticks) {
+    svg.append(svgEl("line", { x1:x0, x2:x1, y1:y(t), y2:y(t), stroke: css("--line-2"), "stroke-width":1 }));
+    const tx = svgEl("text", { x: x0-6, y: y(t)+3.5, "text-anchor":"end" }); tx.textContent = fmt(t); svg.append(tx);
+  }
+}
+function xLabels(svg, labels, xc, y) { labels.forEach((l, i) => { const t = svgEl("text", { x: xc(i), y, "text-anchor":"middle" }); t.textContent = l; svg.append(t); }); }
+
+// Bar chart: values with per-bar style (actual / forecast)
+function bars(host, { labels, values, kinds, color, fmtAxis, fmtVal, tipFn, H=240, labelEvery=1, labelAt=null, band=null }) {
+  const { svg, W, show, hide } = frame(host, H);
+  const L = 46, R = 8, T = 18, B = 26;
+  const max = Math.max(...values), ticks = niceTicks(max);
+  const top = ticks[ticks.length-1];
+  const y = v => T + (H-T-B) * (1 - v/top);
+  const bw = (W-L-R)/labels.length, barW = Math.max(6, Math.min(44, bw-6));
+  const xc = i => L + bw*i + bw/2;
+  yAxis(svg, ticks, y, L, W-R, fmtAxis);
+  if (band != null) {
+    svg.append(svgEl("rect", { x: L+bw*band, y: T, width: W-R-(L+bw*band), height: H-T-B, fill: css("--line-2"), opacity: 0.6 }));
+    const bt = svgEl("text", { x: L+bw*band+6, y: T+10 }); bt.textContent = "Forecast"; svg.append(bt);
+  }
+  const c = css(color);
+  labels.forEach((lab, i) => {
+    const v = values[i], x = xc(i)-barW/2, h = y(0)-y(v), r = Math.min(4, barW/2, h);
+    const d = `M${x},${y(0)} V${y(v)+r} Q${x},${y(v)} ${x+r},${y(v)} H${x+barW-r} Q${x+barW},${y(v)} ${x+barW},${y(v)+r} V${y(0)} Z`;
+    const fc = kinds && kinds[i] === "f";
+    svg.append(svgEl("path", { d, fill: fc ? `color-mix(in srgb, ${c} 45%, transparent)` : c }));
+    if (labelAt ? labelAt.includes(i) : (i % labelEvery === 0 || i === labels.length-1)) { const t = svgEl("text", { x: xc(i), y: y(v)-5, "text-anchor":"middle", class:"lbl" }); t.textContent = fmtVal(v); svg.append(t); }
+    const hit = svgEl("rect", { x: L+bw*i, y: T, width: bw, height: H-T-B, fill:"transparent" });
+    hit.addEventListener("pointerenter", () => show(xc(i), y(v), tipFn(i)));
+    hit.addEventListener("pointerleave", hide);
+    svg.append(hit);
+  });
+  svg.append(svgEl("line", { x1:L, x2:W-R, y1:y(0), y2:y(0), stroke: css("--ink-3"), "stroke-width":1 }));
+  xLabels(svg, labels, xc, H-8);
+}
+
+// Line chart: series [{name, values (null gaps), color, dash, width}]
+function lines(host, { labels, series, fmtAxis, tipFn, H=260, yMin=0, splitAt=null }) {
+  const { svg, W, show, hide } = frame(host, H);
+  const L = 46, R = 12, T = 14, B = 26;
+  const all = series.flatMap(s => s.values.filter(v => v != null));
+  const ticks = niceTicks(Math.max(...all)), top = ticks[ticks.length-1];
+  const y = v => T + (H-T-B) * (1 - (v-yMin)/(top-yMin));
+  const xc = i => L + (W-L-R) * (i/(labels.length-1));
+  yAxis(svg, ticks.filter(t => t >= yMin), y, L, W-R, fmtAxis);
+  if (splitAt != null) {
+    svg.append(svgEl("rect", { x: xc(splitAt), y: T, width: W-R-xc(splitAt), height: H-T-B, fill: css("--line-2"), opacity: 0.6 }));
+    const t = svgEl("text", { x: xc(splitAt)+6, y: T+10 }); t.textContent = "Forecast"; svg.append(t);
+  }
+  for (const s of series) {
+    let d = ""; s.values.forEach((v, i) => { if (v == null) return; d += (d && s.values[i-1] != null ? "L" : "M") + xc(i) + "," + y(v); });
+    svg.append(svgEl("path", { d, fill:"none", stroke: css(s.color), "stroke-width": s.width || 2, "stroke-dasharray": s.dash ? "5 4" : "", "stroke-linejoin":"round", "stroke-linecap":"round" }));
+    if (s.end) { const i = s.values.length-1; const v = s.values[i]; svg.append(svgEl("circle", { cx: xc(i), cy: y(v), r: 4, fill: css(s.color), stroke: css("--surface"), "stroke-width": 2 })); }
+  }
+  xLabels(svg, labels, xc, H-8);
+  const guide = svgEl("line", { y1: T, y2: H-B, stroke: css("--ink-3"), "stroke-width": 1, opacity: 0 });
+  svg.append(guide);
+  const ov = svgEl("rect", { x: L, y: T, width: W-L-R, height: H-T-B, fill: "transparent" });
+  ov.addEventListener("pointermove", ev => {
+    const r = svg.getBoundingClientRect(); const px = (ev.clientX - r.left) * (W / r.width);
+    const i = Math.max(0, Math.min(labels.length-1, Math.round((px-L)/(W-L-R)*(labels.length-1))));
+    guide.setAttribute("x1", xc(i)); guide.setAttribute("x2", xc(i)); guide.setAttribute("opacity", 0.5);
+    const vals = series.map(s => s.values[i]).filter(v => v != null);
+    show(xc(i), y(Math.max(...vals)), tipFn(i));
+  });
+  ov.addEventListener("pointerleave", () => { guide.setAttribute("opacity", 0); hide(); });
+  svg.append(ov);
+}
+
+// Stacked bars
+function stacked(host, { labels, stacks, kinds, H=260, fmtAxis, tipFn }) {
+  const { svg, W, show, hide } = frame(host, H);
+  const L = 50, R = 8, T = 18, B = 26;
+  const totals = labels.map((_, i) => stacks.reduce((a, s) => a + s.values[i], 0));
+  const ticks = niceTicks(Math.max(...totals)), top = ticks[ticks.length-1];
+  const y = v => T + (H-T-B) * (1 - v/top);
+  const bw = (W-L-R)/labels.length, barW = Math.max(8, Math.min(48, bw-10));
+  const xc = i => L + bw*i + bw/2;
+  yAxis(svg, ticks, y, L, W-R, fmtAxis);
+  labels.forEach((lab, i) => {
+    let acc = 0; const x = xc(i)-barW/2;
+    stacks.forEach((s, k) => {
+      const v = s.values[i], y0 = y(acc), y1 = y(acc+v), last = k === stacks.length-1;
+      const gap = k ? 1 : 0, h = y0 - y1 - gap - (last ? 0 : 1);
+      const r = last ? Math.min(4, h) : 0;
+      const top1 = y1 + (last ? 0 : 1);
+      const d = r ? `M${x},${y0-gap} V${top1+r} Q${x},${top1} ${x+r},${top1} H${x+barW-r} Q${x+barW},${top1} ${x+barW},${top1+r} V${y0-gap} Z` : `M${x},${y0-gap} V${top1} H${x+barW} V${y0-gap} Z`;
+      const c = css(s.color), fc = kinds[i] === "f";
+      svg.append(svgEl("path", { d, fill: fc ? `color-mix(in srgb, ${c} 55%, transparent)` : c }));
+      acc += v;
+    });
+    const t = svgEl("text", { x: xc(i), y: y(totals[i])-5, "text-anchor":"middle", class:"lbl" }); t.textContent = bn(totals[i]); svg.append(t);
+    const hit = svgEl("rect", { x: L+bw*i, y: T, width: bw, height: H-T-B, fill:"transparent" });
+    hit.addEventListener("pointerenter", () => show(xc(i), y(totals[i]), tipFn(i)));
+    hit.addEventListener("pointerleave", hide);
+    svg.append(hit);
+  });
+  svg.append(svgEl("line", { x1:L, x2:W-R, y1:y(0), y2:y(0), stroke: css("--ink-3"), "stroke-width":1 }));
+  xLabels(svg, labels, xc, H-8);
+}
+
+// ---------- TABLE HELPER ----------
+function table(host, head, rows, estFrom = Infinity) {
+  const t = el("table");
+  const hr = el("tr", {}, head.map((h, i) => el("th", { text: h, class: i >= estFrom ? "est" : "" })));
+  t.append(el("thead", {}, hr));
+  const tb = el("tbody");
+  for (const r of rows) {
+    const tr = el("tr", { class: r.cls || "" });
+    r.cells.forEach((c, i) => {
+      const td = el("td", { class: [i ? "num" : "", i >= estFrom ? "est" : "", r.input && i ? "input" : ""].join(" ").trim() });
+      if (c instanceof Node) td.append(c); else td.textContent = c;
+      tr.append(td);
+    });
+    tb.append(tr);
+  }
+  t.append(tb);
+  host.innerHTML = ""; host.append(t);
+}
+const pill = (fav, text) => el("span", { class: "pill " + (fav === null ? "neu" : fav ? "fav" : "unf"), text });
+
+// ---------- RENDER: OVERVIEW ----------
+function renderKpis() {
+  const i = 5, fcf = A.ocf[i]-A.capex[i], g = A.rev[i]/A.rev[i-1]-1, om = A.oi[i]/A.rev[i], om0 = A.oi[i-1]/A.rev[i-1];
+  const kp = [
+    ["FY26 revenue", bn(A.rev[i]), sgn(g, v=>pct(v)) + " y/y"],
+    ["GAAP operating margin", pct(om), pts(om-om0) + " y/y"],
+    ["Free cash flow", bn(fcf), pct(fcf/A.rev[i]) + " of revenue"],
+    ["RPO (contracted backlog)", "$" + RPO.v[7].toFixed(1) + "B", sgn(RPO.v[7]/RPO.v[6]-1, v=>pct(v,0)) + " y/y"],
+    ["Rule of 40", ((g + fcf/A.rev[i])*100).toFixed(0), "growth + FCF margin; ≥40 is healthy"],
+  ];
+  const host = document.getElementById("kpis"); host.innerHTML = "";
+  for (const [k, v, d] of kp) host.append(el("div", { class: "stat" }, [el("span", { class:"k", text:k }), el("span", { class:"v", text:v }), el("span", { class:"d", text:d })]));
+}
+function renderOverview(fc) {
+  const all = hist.concat(fc);
+  document.getElementById("ov-scn-note").textContent = "$B · shaded years are forecast (" + (scn === "custom" ? "custom inputs" : scn + " case") + ")";
+  bars(document.getElementById("c-ov-rev"), {
+    labels: all.map(r => r.fy.replace("FY","")), values: all.map(r => r.rev), kinds: all.map((r, i) => i > 5 ? "f" : "a"),
+    color: "--s1", fmtAxis: v => (v/1000).toFixed(0), fmtVal: v => "$" + (v/1000).toFixed(1) + "B", labelAt: [0, 5, 10], band: 6,
+    tipFn: i => `<b>${all[i].fy}</b> ${i>5?"(forecast)":"(actual)"}<br>Revenue ${bn(all[i].rev, 2)}<br>Growth ${pct(all[i].g)}`,
+  });
+  const om = all.map(r => r.oi/r.rev);
+  lines(document.getElementById("c-ov-margin"), {
+    labels: all.map(r => r.fy.replace("FY","")), splitAt: 5,
+    series: [
+      { values: om.map((v, i) => i <= 5 ? v*100 : null), color: "--s1" },
+      { values: om.map((v, i) => i >= 5 ? v*100 : null), color: "--s1", dash: true, end: true },
+    ],
+    fmtAxis: v => v + "%",
+    tipFn: i => `<b>${all[i].fy}</b><br>GAAP op. margin ${pct(om[i])}<br>Op. income ${bn(all[i].oi, 2)}`,
+  });
+}
+
+// ---------- RENDER: ACTUALS ----------
+function renderActuals() {
+  const R = (label, arr, opt={}) => ({ cells: [label, ...arr], ...opt });
+  const p = (num) => A.fy.map((_, i) => pct(num[i]/A.rev[i]));
+  const cor = A.rev.map((v, i) => v - A.gp[i]);
+  const fcf = A.ocf.map((v, i) => v - A.capex[i]);
+  const g = A.rev.map((v, i) => pct(i ? v/A.rev[i-1]-1 : 21252/17098-1));
+  table(document.getElementById("t-annual"), ["$M", ...A.fy], [
+    R("Revenue", A.rev.map(m), { cls:"total" }),
+    R("Growth y/y", g, { cls:"sub" }),
+    R("Cost of revenue", cor.map(v => m(-v))),
+    R("Gross profit", A.gp.map(m), { cls:"total" }),
+    R("Gross margin", p(A.gp), { cls:"sub" }),
+    R("Sales & marketing", A.sm.map(v => m(-v))),
+    R("% of revenue", p(A.sm), { cls:"sub" }),
+    R("Research & development", A.rd.map(v => m(-v))),
+    R("% of revenue", p(A.rd), { cls:"sub" }),
+    R("General & administrative", A.ga.map(v => m(-v))),
+    R("% of revenue", p(A.ga), { cls:"sub" }),
+    R("Restructuring", A.rs.map(v => v ? m(-v) : "–")),
+    R("Operating income (GAAP)", A.oi.map(m), { cls:"total" }),
+    R("Operating margin", p(A.oi), { cls:"sub" }),
+    R("Net income", A.ni.map(m)),
+    R("Diluted EPS ($)", A.eps.map(v => v.toFixed(2))),
+    R("Operating cash flow", A.ocf.map(m), { cls:"total" }),
+    R("Capital expenditures", A.capex.map(v => m(-v))),
+    R("Free cash flow", fcf.map(m), { cls:"total" }),
+    R("FCF margin", p(fcf), { cls:"sub" }),
+    R("Stock-based compensation", A.sbc.map(m)),
+  ]);
+  const qg = Q.rev.map((v, i) => i < 3 ? v/QPRIOR[i]-1 : i === 3 ? null : v/Q.rev[i-4]-1);
+  table(document.getElementById("t-quarterly"), ["$M", ...Q.q], [
+    { cells: ["Revenue", ...Q.rev.map(m)], cls:"total" },
+    { cells: ["Growth y/y", ...qg.map(v => v == null ? "–" : pct(v))], cls:"sub" },
+    { cells: ["Gross profit", ...Q.gp.map(m)] },
+    { cells: ["Gross margin", ...Q.gp.map((v,i) => pct(v/Q.rev[i]))], cls:"sub" },
+    { cells: ["Sales & marketing", ...Q.sm.map(v => m(-v))] },
+    { cells: ["Research & development", ...Q.rd.map(v => m(-v))] },
+    { cells: ["General & administrative", ...Q.ga.map(v => m(-v))] },
+    { cells: ["Restructuring", ...Q.rs.map(v => m(-v))] },
+    { cells: ["Operating income (GAAP)", ...Q.oi.map(m)], cls:"total" },
+    { cells: ["Operating margin", ...Q.oi.map((v,i) => pct(v/Q.rev[i]))], cls:"sub" },
+  ]);
+  bars(document.getElementById("c-q-rev"), {
+    labels: Q.q.map(q => q.replace(" FY", "'")), values: Q.rev, color: "--s1", H: 220,
+    fmtAxis: v => (v/1000).toFixed(0) + "B", fmtVal: v => (v/1000).toFixed(1),
+    tipFn: i => `<b>${Q.q[i]}</b><br>Revenue ${m(Q.rev[i])}M` + (qg[i] != null ? `<br>Growth ${pct(qg[i])} y/y` : ""),
+  });
+  bars(document.getElementById("c-rpo"), {
+    labels: RPO.fy, values: RPO.v, color: "--s3", H: 220,
+    fmtAxis: v => v.toFixed(0), fmtVal: v => v.toFixed(1), labelEvery: 1,
+    tipFn: i => `<b>${RPO.fy[i]}</b><br>RPO $${RPO.v[i].toFixed(1)}B` + (i ? `<br>${sgn(RPO.v[i]/RPO.v[i-1]-1, v=>pct(v))} y/y` : ""),
+  });
+}
+
+// ---------- RENDER: FORECAST ----------
+function buildInputs() {
+  const host = document.getElementById("inputs"); host.innerHTML = "";
+  for (const d of INPUTS) {
+    if (d.group) { host.append(el("div", { class: "group-label", text: d.group })); continue; }
+    const id = "in-" + d.id;
+    const out = el("output", { for: id, id: id + "-out" });
+    const inp = el("input", { type: "range", id, min: d.min, max: d.max, step: d.step });
+    inp.value = state[d.id];
+    out.textContent = d.fmt(+inp.value);
+    inp.addEventListener("input", () => { state[d.id] = +inp.value; out.textContent = d.fmt(+inp.value); scn = matchPreset(); update(); });
+    host.append(el("div", { class: "inp" }, [el("div", { class: "row" }, [el("label", { for: id, text: d.label }), out]), inp, el("span", { class: "hint", text: d.hint })]));
+  }
+}
+function matchPreset() { for (const k in PRESETS) if (Object.keys(PRESETS[k]).every(f => Math.abs(PRESETS[k][f] - state[f]) < 1e-9)) return k; return "custom"; }
+function applyPreset(k) { state = { ...PRESETS[k] }; scn = k; for (const d of INPUTS) if (d.id) { const i = document.getElementById("in-" + d.id); i.value = state[d.id]; document.getElementById("in-" + d.id + "-out").textContent = d.fmt(state[d.id]); } update(); }
+
+function renderForecast(fc) {
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.scn === scn));
+  const f31 = fc[4], f26 = hist[5];
+  const cagr = Math.pow(f31.rev/f26.rev, 1/5) - 1;
+  const r40 = (f31.g + f31.fcf/f31.rev)*100;
+  const kp = [
+    ["FY31E revenue", bn(f31.rev), "5-yr CAGR " + pct(cagr)],
+    ["FY31E GAAP op. margin", pct(f31.oi/f31.rev), pts(f31.oi/f31.rev - f26.oi/f26.rev) + " vs FY26"],
+    ["FY31E free cash flow", bn(f31.fcf), pct(f31.fcf/f31.rev) + " margin"],
+    ["FY31E Rule of 40", r40.toFixed(0), r40 >= 40 ? "Meets 40 threshold" : "Below 40 threshold"],
+  ];
+  const host = document.getElementById("fc-kpis"); host.innerHTML = "";
+  for (const [k, v, d] of kp) host.append(el("div", { class: "tile" }, [el("span", { class:"k", text:k }), el("span", { class:"v", text:v }), el("span", { class:"d", text:d })]));
+
+  // P&L table
+  const all = [hist[4], hist[5], ...fc];
+  const head = ["$M", ...all.map(r => r.fy + (r.fy.endsWith("E") ? "" : "A"))];
+  const row = (label, f, opt={}) => ({ cells: [label, ...all.map(f)], ...opt });
+  table(document.getElementById("t-forecast"), head, [
+    row("Revenue", r => m(r.rev), { cls:"total" }),
+    row("Growth y/y", r => pct(r.g), { cls:"sub" }),
+    row("Gross profit", r => m(r.gp)),
+    row("Gross margin", r => pct(r.gp/r.rev), { cls:"sub" }),
+    row("Sales & marketing", r => m(-r.sm)),
+    row("% of revenue", r => pct(r.sm/r.rev), { cls:"sub" }),
+    row("Research & development", r => m(-r.rd)),
+    row("% of revenue", r => pct(r.rd/r.rev), { cls:"sub" }),
+    row("General & administrative", r => m(-r.ga)),
+    row("% of revenue", r => pct(r.ga/r.rev), { cls:"sub" }),
+    row("Restructuring", r => m(-r.rs)),
+    row("Operating income (GAAP)", r => m(r.oi), { cls:"total" }),
+    row("Operating margin", r => pct(r.oi/r.rev), { cls:"sub" }),
+    row("Operating cash flow", r => m(r.ocf)),
+    row("Capital expenditures", r => m(-r.capex)),
+    row("Free cash flow", r => m(r.fcf), { cls:"total" }),
+    row("FCF margin", r => pct(r.fcf/r.rev), { cls:"sub" }),
+    row("Rule of 40", r => ((r.g + r.fcf/r.rev)*100).toFixed(1), { cls:"sub" }),
+  ], 3);
+  const fy27om = fc[0].oi/fc[0].rev;
+  document.getElementById("fc-note").textContent = `FY27E GAAP op. margin ${pct(fy27om)} on H1 run-rate vs. company guide 20.1% · FY27E OCF = FY26 +4.5% per guidance`;
+
+  // Scenario lines
+  const labels = ["FY24","FY25","FY26","FY27E","FY28E","FY29E","FY30E","FY31E"];
+  const runs = {}; for (const k in PRESETS) runs[k] = model(PRESETS[k]);
+  const act = [A.rev[3], A.rev[4], A.rev[5]];
+  const pad = arr => [null, null, A.rev[5], ...arr.map(r => r.rev)].map(v => v == null ? null : v/1000);
+  const series = [
+    { name: "Actual", values: [...act.map(v => v/1000), null, null, null, null, null], color: "--ink", width: 2.5 },
+    ...["bear","base","bull"].map(k => ({ name: k[0].toUpperCase()+k.slice(1), values: pad(runs[k]), color: SCN_COLOR[k], dash: true, width: 2, end: true })),
+  ];
+  if (scn === "custom") series.push({ name: "Your inputs", values: pad(fc), color: "--ink", width: 2.5, end: true });
+  const lg = document.getElementById("lg-scn"); lg.innerHTML = "";
+  for (const s of series) lg.append(el("span", {}, [el("i", { class: "sw " + (s.dash ? "dash" : "line"), style: s.dash ? `border-color:var(${s.color})` : `background:var(${s.color})` }), document.createTextNode(s.name)]));
+  lines(document.getElementById("c-scn"), {
+    labels, series, splitAt: 2, yMin: 30, H: 260, fmtAxis: v => "$" + v,
+    tipFn: i => `<b>${labels[i]}</b><br>` + series.filter(s => s.values[i] != null).map(s => `${s.name} $${s.values[i].toFixed(1)}B`).join("<br>"),
+  });
+
+  // Opex stacked
+  const ox = [hist[4], hist[5], ...fc];
+  stacked(document.getElementById("c-opex"), {
+    labels: ox.map(r => r.fy), kinds: ox.map((r, i) => i > 1 ? "f" : "a"), fmtAxis: v => (v/1000).toFixed(0) + "B",
+    stacks: [
+      { name:"S&M", values: ox.map(r => r.sm), color:"--s1" },
+      { name:"R&D", values: ox.map(r => r.rd), color:"--s2" },
+      { name:"G&A", values: ox.map(r => r.ga), color:"--s3" },
+    ],
+    tipFn: i => { const r = ox[i], t = r.sm+r.rd+r.ga; return `<b>${r.fy}</b><br>S&amp;M ${m(r.sm)} (${pct(r.sm/r.rev)})<br>R&amp;D ${m(r.rd)} (${pct(r.rd/r.rev)})<br>G&amp;A ${m(r.ga)} (${pct(r.ga/r.rev)})<br>Total ${m(t)} · ${pct(t/r.rev)} of rev`; },
+  });
+}
+
+// ---------- RENDER: BUDGET VS ACTUAL ----------
+function renderBudget() {
+  const g = { lo: 40500, hi: 40900 }, mid = (g.lo+g.hi)/2, act = A.rev[5];
+  const actOM = A.oi[5]/A.rev[5], gOM = 0.216, impliedOI = mid*gOM;
+  const var$ = act - mid;
+  table(document.getElementById("t-bva"), ["Metric", "Budget (guide)", "Actual", "Variance", "Var %", ""], [
+    { cells: ["Revenue", m(g.lo)+"–"+m(g.hi), m(act), sgn(var$, m), sgn(var$/mid, v=>pct(v)), pill(true, "F")] },
+    { cells: ["Revenue growth y/y", "7–8%", pct(act/A.rev[4]-1), "+1.6–2.6 pts", "", pill(true, "F")] },
+    { cells: ["GAAP operating margin", "21.6%", pct(actOM), pts(actOM-gOM), "", pill(false, "U")] },
+    { cells: ["GAAP operating income (implied at midpoint)", m(impliedOI), m(A.oi[5]), sgn(A.oi[5]-impliedOI, m), sgn(A.oi[5]/impliedOI-1, v=>pct(v)), pill(false, "U")] },
+    { cells: ["Non-GAAP operating margin", "34.0%", "34.1%", "+0.1 pts", "", pill(true, "F")] },
+  ]);
+
+  // Guidance ladder
+  const host = document.getElementById("c-guide");
+  const H = 200, { svg, W, show, hide } = frame(host, H);
+  const L = 104, R = 16, T = 10, B = 26;
+  const lo = 45600, hi = 46800;
+  const x = v => L + (W-L-R) * (v-lo)/(hi-lo);
+  const ticks = [45600, 45800, 46000, 46200, 46400, 46600, 46800];
+  for (const t of ticks) { svg.append(svgEl("line", { x1:x(t), x2:x(t), y1:T, y2:H-B, stroke: css("--line-2") })); const tx = svgEl("text", { x:x(t), y:H-8, "text-anchor":"middle" }); tx.textContent = (t/1000).toFixed(1); svg.append(tx); }
+  const runRate = H1.rev / ((Q.rev[0]+Q.rev[1])/A.rev[5]);
+  const rowH = (H-T-B)/GUIDE27.length;
+  GUIDE27.forEach((gd, i) => {
+    const cy = T + rowH*i + rowH/2;
+    const lt = svgEl("text", { x: L-8, y: cy+4, "text-anchor":"end", class:"lbl" }); lt.textContent = gd.label; svg.append(lt);
+    svg.append(svgEl("rect", { x: x(gd.lo), y: cy-8, width: x(gd.hi)-x(gd.lo), height: 16, rx: 4, fill: css("--s1"), opacity: 0.85 }));
+    const md = (gd.lo+gd.hi)/2;
+    svg.append(svgEl("line", { x1: x(md), x2: x(md), y1: cy-11, y2: cy+11, stroke: css("--ink"), "stroke-width": 2 }));
+    const hit = svgEl("rect", { x: L, y: cy-rowH/2, width: W-L-R, height: rowH, fill: "transparent" });
+    hit.addEventListener("pointerenter", () => show(x(md), cy-10, `<b>${gd.date}</b><br>$${(gd.lo/1000).toFixed(1)}–${(gd.hi/1000).toFixed(1)}B · mid $${(md/1000).toFixed(2)}B<br>GAAP op. margin ${gd.gaap}%`));
+    hit.addEventListener("pointerleave", hide);
+    svg.append(hit);
+  });
+  svg.append(svgEl("line", { x1: x(runRate), x2: x(runRate), y1: T, y2: H-B, stroke: css("--s2"), "stroke-width": 2 }));
+  const rt = svgEl("text", { x: x(runRate)+4, y: T+8, class: "lbl" }); rt.textContent = "$" + (runRate/1000).toFixed(2) + "B"; svg.append(rt);
+
+  // Pacing
+  const gm = 46250, fy26h1share = (Q.rev[0]+Q.rev[1])/A.rev[5];
+  const goi = gm*0.201, h2oi = goi - H1.oi, h2rev = gm - H1.rev;
+  table(document.getElementById("t-pacing"), ["", "Value", "Read"], [
+    { cells: ["H1 FY27 revenue", m(H1.rev), ""] },
+    { cells: ["% of Aug guide midpoint ($46,250)", pct(H1.rev/gm), ""] },
+    { cells: ["FY26 H1 share of full year", pct(fy26h1share), ""] },
+    { cells: ["FY27 at FY26 seasonality", m(runRate), pill(true, "Above top of guide")] },
+    { cells: ["Implied H2 revenue at midpoint", m(h2rev), "+" + pct(h2rev/(A.rev[5]-Q.rev[0]-Q.rev[1])-1) + " vs H2 FY26"] },
+    { cells: ["H1 GAAP op. margin", pct(H1.oi/H1.rev), ""] },
+    { cells: ["Implied H2 GAAP op. margin", pct(h2oi/h2rev), pill(null, "Step-down needed to hit 20.1%")] },
+  ]);
+
+  // Reforecast log
+  table(document.getElementById("t-reforecast"), ["Update", "Revenue range", "Midpoint", "Δ mid", "GAAP op. margin", "Non-GAAP op. margin", "Driver of change"], GUIDE27.map((gd, i) => {
+    const md = (gd.lo+gd.hi)/2, prev = i ? (GUIDE27[i-1].lo+GUIDE27[i-1].hi)/2 : null;
+    return { cells: [gd.date, m(gd.lo) + "–" + m(gd.hi), m(md), prev == null ? "–" : sgn(md-prev, m), gd.gaap.toFixed(1)+"%" + (i ? " (" + (gd.gaap-GUIDE27[i-1].gaap).toFixed(1) + ")" : ""), gd.ng.toFixed(1)+"%", el("span", { style: "white-space:normal;display:block;min-width:280px;text-align:left;color:var(--ink-2);font-family:var(--f-body)", text: gd.note })] };
+  }));
+}
+
+// ---------- ROUTING & UPDATE ----------
+const TABS = ["overview","actuals","forecast","budget","sources"];
+let current = null;
+function route() {
+  const h = (location.hash || "#overview").slice(1);
+  const tab = TABS.includes(h) ? h : "overview";
+  current = tab;
+  for (const t of TABS) document.getElementById("v-" + t).hidden = t !== tab;
+  document.querySelectorAll("nav.tabs a").forEach(a => { if (a.dataset.tab === tab) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  draw();
+}
+function draw() {
+  const fc = model(state);
+  if (current === "overview") { renderKpis(); renderOverview(fc); }
+  if (current === "actuals") renderActuals();
+  if (current === "forecast") renderForecast(fc);
+  if (current === "budget") renderBudget();
+}
+function update() { save(); draw(); }
+
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => applyPreset(b.dataset.scn)));
+document.getElementById("reset").addEventListener("click", () => applyPreset("base"));
+buildInputs();
+const hdr = document.querySelector("header.top");
+const onScroll = () => hdr.classList.toggle("scrolled", window.scrollY > 4);
+window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+window.addEventListener("hashchange", route);
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(draw, 120); });
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
+new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+route();
+})();
+</script>

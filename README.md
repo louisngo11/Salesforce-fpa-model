@@ -2,7 +2,7 @@
 
 A driver-based budget and five-year forecast for Salesforce (NYSE: CRM), built from SEC filings. It includes live Bear/Base/Bull scenarios, budget-vs-actual variance analysis, and a reforecast log that is updated each quarter.
 
-**Built by Louis Ngo** · Live dashboard: *link coming soon*
+**Built by Louis Ngo** · **[Open the live dashboard](https://claude.ai/artifact/KHbCpp5fbkp9nkmNr5NCkC)**
 
 > Growth has slowed to high single digits. Margins and cash flow now carry the story.
 
